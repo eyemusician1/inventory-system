@@ -190,13 +190,6 @@ export default function BorrowFormPage() {
                 {confirmationTime}
               </span>
             </div>
-
-            <button
-              onClick={() => { setSuccess(false); setIsViewOnly(true); }}
-              className={`text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center w-full p-4 rounded-2xl border ${isDarkMode ? 'border-white/10 text-white/50 hover:text-white hover:bg-white/5' : 'border-slate-200 text-slate-400 hover:text-slate-900 hover:bg-slate-50'}`}
-            >
-              ← Review Submitted Form
-            </button>
           </div>
         ) : (
           <>
