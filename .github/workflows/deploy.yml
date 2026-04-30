@@ -41,14 +41,8 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
-      - name: Authenticate to Firebase (service account)
-        run: |
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > ${{ runner.temp }}/firebase-service-account.json
-          ls -l ${{ runner.temp }}/firebase-service-account.json || true
-        shell: bash
-
       - name: Deploy to Firebase Hosting (use firebase-tools CLI)
+        run: npx firebase-tools@latest deploy --only hosting
+        # this step runs in the job default `working-directory: inventory-system`
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-          FIREBASE_PROJECT: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-        run: npx firebase-tools@latest deploy --only hosting --project "$FIREBASE_PROJECT"
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
