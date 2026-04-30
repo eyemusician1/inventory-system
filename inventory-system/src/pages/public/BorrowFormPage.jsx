@@ -30,6 +30,13 @@ export default function BorrowFormPage() {
   const roleRef = useRef(null);
   const roles = ["Student", "Faculty", "Staff", "Other"];
 
+  // Dismisses mobile keyboard by blurring the active element
+  const dismissKeyboard = () => {
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
+  };
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -165,7 +172,7 @@ export default function BorrowFormPage() {
               </svg>
             </div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 tracking-tight">Checkout Confirmed</h2>
-            <p className="opacity-50 leading-relaxed text-base sm:text-lg">Your request has been recorded. Please show this screen to the lab staff to receive your equipment.</p>
+            <p className="opacity-50 leading-relaxed text-base sm:text-lg">Your request has been recorded. Please take a screenshot for your records.</p>
           </div>
         ) : (
           <>
@@ -183,6 +190,7 @@ export default function BorrowFormPage() {
                   required type="text" placeholder="e.g. Maria Santos"
                   className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border outline-none focus:border-[#3852A4] transition-all text-base sm:text-lg ${inputBg}`}
                   onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                  onBlur={dismissKeyboard}
                 />
               </div>
 
@@ -190,7 +198,7 @@ export default function BorrowFormPage() {
               <div className="flex flex-col relative" ref={roleRef}>
                 <label className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] ml-4 sm:ml-6 mb-2 ${labelText}`}>Affiliation / Role</label>
                 <div
-                  onClick={() => setIsRoleOpen(!isRoleOpen)}
+                  onClick={() => { dismissKeyboard(); setIsRoleOpen(!isRoleOpen); }}
                   className={`w-full p-4 sm:p-6 rounded-2xl sm:rounded-3xl border text-base sm:text-lg cursor-pointer flex justify-between items-center transition-all ${inputBg} ${isRoleOpen ? 'border-[#3852A4] ring-1 ring-[#3852A4]/50' : ''}`}
                 >
                   <span className={role ? '' : 'opacity-40'}>{role || 'Select Affiliation...'}</span>
@@ -204,7 +212,7 @@ export default function BorrowFormPage() {
                     {roles.map((r) => (
                       <div
                         key={r}
-                        onClick={() => { setRole(r); setIsRoleOpen(false); }}
+                        onClick={() => { setRole(r); setIsRoleOpen(false); dismissKeyboard(); }}
                         className={`px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg cursor-pointer transition-all ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-50'} ${role === r ? 'text-[#3852A4] font-bold bg-[#3852A4]/5' : ''}`}
                       >
                         {r}
@@ -219,9 +227,10 @@ export default function BorrowFormPage() {
                 <div className="flex flex-col animate-in slide-in-from-top-2 fade-in duration-300">
                   <label className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] ml-4 sm:ml-6 mb-2 ${labelText}`}>Student ID Number</label>
                   <input
-                    required type="text" placeholder="e.g. 2023-0142"
+                    required type="text" placeholder="e.g. 202613213"
                     className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border outline-none focus:border-[#3852A4] transition-all text-base sm:text-lg ${inputBg}`}
                     onChange={(e) => setFormData({...formData, idNumber: e.target.value})}
+                    onBlur={dismissKeyboard}
                   />
                 </div>
               )}
@@ -234,6 +243,7 @@ export default function BorrowFormPage() {
                     required type="text" placeholder="e.g. Guest Researcher"
                     className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border outline-none focus:border-[#3852A4] transition-all text-base sm:text-lg ${inputBg}`}
                     onChange={(e) => setFormData({...formData, otherRole: e.target.value})}
+                    onBlur={dismissKeyboard}
                   />
                 </div>
               )}
@@ -274,7 +284,8 @@ export default function BorrowFormPage() {
                 <label className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] ml-4 sm:ml-6 mb-2 ${labelText}`}>Expected Return Date</label>
                 <DatePicker
                   selected={formData.returnDate}
-                  onChange={(date) => setFormData({...formData, returnDate: date})}
+                  onChange={(date) => { setFormData({...formData, returnDate: date}); dismissKeyboard(); }}
+                  onFocus={dismissKeyboard}
                   minDate={new Date()}
                   placeholderText="Select return date"
                   wrapperClassName="w-full"
