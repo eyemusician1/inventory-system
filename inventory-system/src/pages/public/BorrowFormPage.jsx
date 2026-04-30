@@ -24,21 +24,20 @@ export default function BorrowFormPage() {
 
   const [role, setRole] = useState('');
   const [isRoleOpen, setIsRoleOpen] = useState(false);
-
   const [borrowQuantity, setBorrowQuantity] = useState(1);
 
   const roleRef = useRef(null);
   const roles = ["Student", "Faculty", "Staff", "Other"];
 
-  // Dismisses mobile keyboard by blurring the active element
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [confirmationTime, setConfirmationTime] = useState('');
+
   const dismissKeyboard = () => {
-    if (document.activeElement) {
+    if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
   };
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -73,6 +72,11 @@ export default function BorrowFormPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // --- ENHANCED VALIDATION LOGIC[cite: 15] ---
+    if (!formData.fullName.trim()) {
+      alert("Please enter your full name.");
+      return;
+    }
     if (!role) {
       alert("Please select your affiliation/role.");
       return;
@@ -99,6 +103,11 @@ export default function BorrowFormPage() {
 
     try {
       const finalRole = role === 'Other' ? formData.otherRole : role;
+      const now = new Date();
+      const timestampString = now.toLocaleString('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      });
 
       await addDoc(collection(db, 'logs'), {
         borrowerName: formData.fullName,
@@ -107,7 +116,7 @@ export default function BorrowFormPage() {
         itemName: equipment.name,
         equipmentId: id,
         quantityBorrowed: equipment.trackingType === 'bulk' ? borrowQuantity : 1,
-        dateBorrowed: new Date().toLocaleString(),
+        dateBorrowed: timestampString,
         expectedReturn: formData.returnDate.toLocaleDateString(),
         status: 'Active'
       });
@@ -124,6 +133,7 @@ export default function BorrowFormPage() {
         });
       }
 
+      setConfirmationTime(timestampString);
       setSuccess(true);
     } catch (err) {
       console.error(err);
@@ -161,7 +171,6 @@ export default function BorrowFormPage() {
   return (
     <div className={`min-h-screen w-full flex items-center justify-center p-4 sm:p-6 transition-colors duration-500 ${pageBg}`} style={{ fontFamily: "ui-monospace, monospace" }}>
 
-      {/* Adjusted padding and border radius for mobile */}
       <div className={`w-full max-w-xl p-6 sm:p-8 md:p-12 border rounded-[2rem] sm:rounded-[3rem] backdrop-blur-3xl transition-all ${cardBg}`}>
 
         {success ? (
@@ -172,7 +181,14 @@ export default function BorrowFormPage() {
               </svg>
             </div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 tracking-tight">Checkout Confirmed</h2>
-            <p className="opacity-50 leading-relaxed text-base sm:text-lg">Your request has been recorded. Please take a screenshot for your records.</p>
+            <p className="opacity-50 leading-relaxed text-base sm:text-lg mb-8">Your request has been recorded. Please take a screenshot for your records.</p>
+
+            <div className="pt-8 border-t border-white/5 flex flex-col items-center gap-2">
+              <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] ${isDarkMode ? 'text-white/20' : 'text-slate-300'}`}>Transaction Verified</span>
+              <span className={`text-xs sm:text-sm font-bold tracking-widest ${isDarkMode ? 'text-blue-400/60' : 'text-[#3852A4]/60'}`}>
+                {confirmationTime}
+              </span>
+            </div>
           </div>
         ) : (
           <>
@@ -190,15 +206,13 @@ export default function BorrowFormPage() {
                   required type="text" placeholder="e.g. Maria Santos"
                   className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border outline-none focus:border-[#3852A4] transition-all text-base sm:text-lg ${inputBg}`}
                   onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                  onBlur={dismissKeyboard}
                 />
               </div>
 
-              {/* ROLE DROPDOWN */}
               <div className="flex flex-col relative" ref={roleRef}>
                 <label className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] ml-4 sm:ml-6 mb-2 ${labelText}`}>Affiliation / Role</label>
                 <div
-                  onClick={() => { dismissKeyboard(); setIsRoleOpen(!isRoleOpen); }}
+                  onClick={() => setIsRoleOpen(!isRoleOpen)}
                   className={`w-full p-4 sm:p-6 rounded-2xl sm:rounded-3xl border text-base sm:text-lg cursor-pointer flex justify-between items-center transition-all ${inputBg} ${isRoleOpen ? 'border-[#3852A4] ring-1 ring-[#3852A4]/50' : ''}`}
                 >
                   <span className={role ? '' : 'opacity-40'}>{role || 'Select Affiliation...'}</span>
@@ -212,7 +226,7 @@ export default function BorrowFormPage() {
                     {roles.map((r) => (
                       <div
                         key={r}
-                        onClick={() => { setRole(r); setIsRoleOpen(false); dismissKeyboard(); }}
+                        onClick={() => { setRole(r); setIsRoleOpen(false); }}
                         className={`px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg cursor-pointer transition-all ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-50'} ${role === r ? 'text-[#3852A4] font-bold bg-[#3852A4]/5' : ''}`}
                       >
                         {r}
@@ -222,7 +236,6 @@ export default function BorrowFormPage() {
                 )}
               </div>
 
-              {/* CONDITIONAL ID NUMBER (Only for Students) */}
               {role === 'Student' && (
                 <div className="flex flex-col animate-in slide-in-from-top-2 fade-in duration-300">
                   <label className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] ml-4 sm:ml-6 mb-2 ${labelText}`}>Student ID Number</label>
@@ -230,12 +243,10 @@ export default function BorrowFormPage() {
                     required type="text" placeholder="e.g. 202613213"
                     className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border outline-none focus:border-[#3852A4] transition-all text-base sm:text-lg ${inputBg}`}
                     onChange={(e) => setFormData({...formData, idNumber: e.target.value})}
-                    onBlur={dismissKeyboard}
                   />
                 </div>
               )}
 
-              {/* CONDITIONAL SPECIFY ROLE (Only for "Other") */}
               {role === 'Other' && (
                 <div className="flex flex-col animate-in slide-in-from-top-2 fade-in duration-300">
                   <label className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] ml-4 sm:ml-6 mb-2 ${labelText}`}>Please Specify Role</label>
@@ -243,12 +254,10 @@ export default function BorrowFormPage() {
                     required type="text" placeholder="e.g. Guest Researcher"
                     className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border outline-none focus:border-[#3852A4] transition-all text-base sm:text-lg ${inputBg}`}
                     onChange={(e) => setFormData({...formData, otherRole: e.target.value})}
-                    onBlur={dismissKeyboard}
                   />
                 </div>
               )}
 
-              {/* CONDITIONAL QUANTITY SELECTOR (Only shows for Bulk Items) */}
               {equipment.trackingType === 'bulk' && (
                 <div className="flex flex-col animate-in slide-in-from-top-2 fade-in duration-300">
                   <div className="flex justify-between items-end mb-2 ml-4 sm:ml-6">
@@ -265,9 +274,7 @@ export default function BorrowFormPage() {
                     >
                       -
                     </button>
-
                     <span className="text-xl sm:text-2xl font-bold">{borrowQuantity}</span>
-
                     <button
                       type="button"
                       onClick={() => setBorrowQuantity(Math.min(equipment.availableQuantity, borrowQuantity + 1))}
@@ -279,17 +286,16 @@ export default function BorrowFormPage() {
                 </div>
               )}
 
-              {/* RETURN DATE WITH SUBTLE ICON */}
               <div className="flex flex-col relative">
                 <label className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] ml-4 sm:ml-6 mb-2 ${labelText}`}>Expected Return Date</label>
                 <DatePicker
                   selected={formData.returnDate}
                   onChange={(date) => { setFormData({...formData, returnDate: date}); dismissKeyboard(); }}
-                  onFocus={dismissKeyboard}
                   minDate={new Date()}
                   placeholderText="Select return date"
                   wrapperClassName="w-full"
                   dateFormat="MMMM d, yyyy"
+                  // FIXED: Removed readOnly to ensure the calendar opens on click[cite: 15]
                   className={`w-full p-4 sm:p-6 rounded-2xl sm:rounded-3xl border outline-none transition-all text-base sm:text-lg cursor-pointer
                     ${formData.returnDate
                       ? `border-[#3852A4] font-bold shadow-[0_0_15px_rgba(56,82,164,0.15)] pr-12 sm:pr-14 ${isDarkMode ? 'bg-[#3852A4]/10 text-blue-100' : 'bg-blue-50/50 text-[#3852A4]'}`
@@ -297,7 +303,6 @@ export default function BorrowFormPage() {
                     }
                   `}
                 />
-
                 <div className={`absolute right-4 sm:right-6 top-[calc(50%+10px)] -translate-y-1/2 pointer-events-none transition-all duration-300 ${formData.returnDate ? 'text-[#3852A4] scale-110' : 'opacity-30'}`}>
                   {formData.returnDate ? (
                     <svg width="20" height="20" sm:width="22" sm:height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animate-in zoom-in">
