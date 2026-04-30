@@ -22,3 +22,29 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files
+.env
+.env.*
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.test
+
+# API keys and credential files
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+*.pfx
+*.secret
+*.credentials
+keys.json
+secrets.json
+
+# Firebase local config
+src/firebase/firebase.config.js
+firebase-config.js
+.firebase/
