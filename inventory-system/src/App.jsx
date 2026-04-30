@@ -11,6 +11,7 @@ import DashboardPage from './pages/admin/Dashboard';
 import AddEquipmentPage from './pages/admin/AddEquipment';
 import ReviewBorrowLogs from './pages/admin/ReviewBorrowLogs';
 import GenerateReports from './pages/admin/GenerateReports';
+import BorrowFormPage from './pages/public/BorrowFormPage';
 
 export default function App() {
   return (
@@ -25,6 +26,8 @@ export default function App() {
             <Route path="/equipment" element={<ProtectedRoute><AddEquipmentPage /></ProtectedRoute>} />
             <Route path="/logs" element={<ProtectedRoute><ReviewBorrowLogs /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><GenerateReports /></ProtectedRoute>} />
+            {/* NEW: Public Borrowing Route (No ProtectedRoute wrapper) */}
+            <Route path="/borrow/:id" element={<BorrowFormPage />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
