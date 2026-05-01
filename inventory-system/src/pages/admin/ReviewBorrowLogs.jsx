@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, getDoc, limit } from 'firebase/firestore';
 import { db } from '../../firebase/firebase.config';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -14,13 +14,22 @@ export default function ReviewBorrowLogs() {
   const [returnModal, setReturnModal] = useState({ show: false, log: null });
   const [deleteModal, setDeleteModal] = useState({ show: false, logId: null });
 
+  const LOG_LIMIT = 300;
+
   const showToast = (message, type = 'default') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast({ show: false, message: '', type: 'default' }), 3000);
   };
 
+  const formatLogDate = (log) => {
+    if (log?.dateBorrowedAt?.toDate) {
+      return log.dateBorrowedAt.toDate().toLocaleString();
+    }
+    return log?.dateBorrowed || 'N/A';
+  };
+
   useEffect(() => {
-    const q = query(collection(db, 'logs'), orderBy('dateBorrowed', 'desc'));
+    const q = query(collection(db, 'logs'), orderBy('dateBorrowedAt', 'desc'), limit(LOG_LIMIT));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const logsData = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -167,7 +176,7 @@ export default function ReviewBorrowLogs() {
           <span className="text-4xl sm:text-5xl font-bold text-[#3B82F6] tracking-tighter">{activeCount}</span>
         </div>
         <div className={`p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex justify-between items-center border transition-all ${isDarkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white border-slate-200 shadow-xl shadow-slate-200/40'}`}>
-          <span className={`font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>Total Records</span>
+          <span className={`font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>Recent Records</span>
           <span className="text-4xl sm:text-5xl font-bold tracking-tighter">{logs.length}</span>
         </div>
       </div>
@@ -206,7 +215,7 @@ export default function ReviewBorrowLogs() {
                     </td>
 
                     <td className="px-6 sm:px-8 py-6 sm:py-8 whitespace-nowrap">
-                      <span className={`block font-bold text-xs sm:text-sm mb-1 ${isDarkMode ? 'text-white/80' : 'text-slate-700'}`}>{log.dateBorrowed}</span>
+                      <span className={`block font-bold text-xs sm:text-sm mb-1 ${isDarkMode ? 'text-white/80' : 'text-slate-700'}`}>{formatLogDate(log)}</span>
                       <span className={`text-[10px] sm:text-xs font-bold tracking-widest uppercase ${isDarkMode ? 'text-white/30' : 'text-slate-400'}`}>
                         Due: {log.expectedReturn || 'N/A'}
                       </span>

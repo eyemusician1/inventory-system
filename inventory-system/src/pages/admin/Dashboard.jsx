@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, getCountFromServer, query, where } from 'firebase/firestore';
 import { auth, db } from '../../firebase/firebase.config';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -13,18 +13,38 @@ export default function DashboardPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    const equipmentRef = collection(db, 'equipment');
-    const unsubscribe = onSnapshot(equipmentRef, (snapshot) => {
-      let availableCount = 0, borrowedCount = 0, maintenanceCount = 0;
-      snapshot.forEach((doc) => {
-        const item = doc.data();
-        if (item.status === 'available') availableCount++;
-        if (item.status === 'borrowed') borrowedCount++;
-        if (item.status === 'maintenance') maintenanceCount++;
-      });
-      setStats({ available: availableCount, total: snapshot.size, borrowed: borrowedCount, maintenance: maintenanceCount });
-    });
-    return () => unsubscribe();
+    let isActive = true;
+
+    const fetchCounts = async () => {
+      try {
+        const equipmentRef = collection(db, 'equipment');
+        const [totalSnap, availableSnap, borrowedSnap, maintenanceSnap] = await Promise.all([
+          getCountFromServer(equipmentRef),
+          getCountFromServer(query(equipmentRef, where('status', '==', 'available'))),
+          getCountFromServer(query(equipmentRef, where('status', '==', 'borrowed'))),
+          getCountFromServer(query(equipmentRef, where('status', '==', 'maintenance'))),
+        ]);
+
+        if (!isActive) return;
+
+        setStats({
+          available: availableSnap.data().count,
+          total: totalSnap.data().count,
+          borrowed: borrowedSnap.data().count,
+          maintenance: maintenanceSnap.data().count,
+        });
+      } catch (error) {
+        console.error('Stats refresh error:', error);
+      }
+    };
+
+    fetchCounts();
+    const intervalId = setInterval(fetchCounts, 30000);
+
+    return () => {
+      isActive = false;
+      clearInterval(intervalId);
+    };
   }, []);
 
   const handleLogout = async () => {

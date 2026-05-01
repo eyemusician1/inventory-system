@@ -36,6 +36,32 @@ export default function GenerateReports() {
   }, []);
 
   // --- REPORT GENERATION LOGIC ---
+  const formatDateValue = (value) => {
+    if (value?.toDate) {
+      return value.toDate().toLocaleDateString();
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    return 'N/A';
+  };
+
+  const formatDateTimeValue = (value) => {
+    if (value?.toDate) {
+      return value.toDate().toLocaleString();
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    return 'N/A';
+  };
+
+  const getSortableDate = (value) => {
+    if (value?.toDate) return value.toDate();
+    if (typeof value === 'string') return new Date(value);
+    return new Date(0);
+  };
+
   const handleGenerate = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -73,7 +99,7 @@ export default function GenerateReports() {
               data.assetTag || 'N/A',
               data.name || 'N/A',
               data.category || 'N/A',
-              data.dateAdded ? new Date(data.dateAdded).toLocaleDateString() : 'N/A'
+              formatDateValue(data.dateAdded)
             ]);
           }
         });
@@ -87,7 +113,7 @@ export default function GenerateReports() {
         snap.forEach(doc => {
           const data = doc.data();
           rows.push([
-            data.dateBorrowed || 'N/A',
+            formatDateTimeValue(data.dateBorrowedAt || data.dateBorrowed),
             data.borrowerName || data.studentName || 'N/A',
             data.borrowerRole || 'N/A',
             data.itemName || 'N/A',
@@ -98,7 +124,7 @@ export default function GenerateReports() {
         });
 
         // Sort by date borrowed (newest first) if possible
-        rows.sort((a, b) => new Date(b[0]) - new Date(a[0]));
+        rows.sort((a, b) => getSortableDate(b[0]) - getSortableDate(a[0]));
       }
 
       // 2. EXPORT AS CSV

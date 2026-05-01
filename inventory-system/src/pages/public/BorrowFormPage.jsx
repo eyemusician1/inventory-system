@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { doc, getDoc, addDoc, collection, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/firebase.config';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -110,29 +110,52 @@ export default function BorrowFormPage() {
         timeStyle: 'short'
       });
 
-      await addDoc(collection(db, 'logs'), {
-        borrowerName: formData.fullName,
-        borrowerId: role === 'Student' ? formData.idNumber : 'N/A',
-        borrowerRole: finalRole,
-        itemName: equipment.name,
-        equipmentId: id,
-        quantityBorrowed: equipment.trackingType === 'bulk' ? borrowQuantity : 1,
-        dateBorrowed: timestampString,
-        expectedReturn: formData.returnDate.toLocaleDateString(),
-        status: 'Active'
-      });
+      await runTransaction(db, async (transaction) => {
+        const eqRef = doc(db, 'equipment', id);
+        const eqSnap = await transaction.get(eqRef);
+        if (!eqSnap.exists()) {
+          throw new Error('Equipment not found.');
+        }
 
-      if (equipment.trackingType === 'bulk') {
-        const newAvailable = equipment.availableQuantity - borrowQuantity;
-        await updateDoc(doc(db, 'equipment', id), {
-          availableQuantity: newAvailable,
-          status: newAvailable === 0 ? 'borrowed' : 'available'
+        const eqData = eqSnap.data();
+        const isBulk = eqData.trackingType === 'bulk';
+        const requestedQty = isBulk ? borrowQuantity : 1;
+
+        if (eqData.status === 'maintenance') {
+          throw new Error('Item is under maintenance.');
+        }
+
+        if (isBulk) {
+          const availableQty = eqData.availableQuantity ?? 0;
+          if (availableQty < requestedQty) {
+            throw new Error('Not enough items available.');
+          }
+          const newAvailable = availableQty - requestedQty;
+          transaction.update(eqRef, {
+            availableQuantity: newAvailable,
+            status: newAvailable === 0 ? 'borrowed' : 'available'
+          });
+        } else {
+          if (eqData.status !== 'available') {
+            throw new Error('Item is not available.');
+          }
+          transaction.update(eqRef, { status: 'borrowed' });
+        }
+
+        const logRef = doc(collection(db, 'logs'));
+        transaction.set(logRef, {
+          borrowerName: formData.fullName,
+          borrowerId: role === 'Student' ? formData.idNumber : 'N/A',
+          borrowerRole: finalRole,
+          itemName: eqData.name,
+          equipmentId: id,
+          quantityBorrowed: requestedQty,
+          dateBorrowedAt: serverTimestamp(),
+          dateBorrowed: timestampString,
+          expectedReturn: formData.returnDate.toLocaleDateString(),
+          status: 'Active'
         });
-      } else {
-        await updateDoc(doc(db, 'equipment', id), {
-          status: 'borrowed'
-        });
-      }
+      });
 
       setConfirmationTime(timestampString);
       setSuccess(true);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, deleteDoc, updateDoc, writeBatch, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../firebase/firebase.config';
 import { useTheme } from '../../context/ThemeContext';
 import { QRCodeSVG } from 'qrcode.react';
@@ -23,6 +23,8 @@ export default function AddEquipmentPage() {
   const [toast, setToast] = useState({ show: false, message: '', type: 'default' });
   const [deleteModal, setDeleteModal] = useState({ show: false, itemId: null });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const EQUIPMENT_LIMIT = 200;
 
   const dropdownRef = useRef(null);
   const categories = ["Electronics", "Glassware", "Hardware", "Peripherals"];
@@ -81,7 +83,7 @@ export default function AddEquipmentPage() {
   }, []);
 
   useEffect(() => {
-    const q = collection(db, 'equipment');
+    const q = query(collection(db, 'equipment'), orderBy('dateAdded', 'desc'), limit(EQUIPMENT_LIMIT));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setEquipmentList(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
@@ -92,21 +94,25 @@ export default function AddEquipmentPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
+      const batch = writeBatch(db);
       if (trackingType === 'bulk') {
+        const docRef = doc(collection(db, 'equipment'));
         const assetTag = `BLK-${category.substring(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
-        await addDoc(collection(db, 'equipment'), {
+        batch.set(docRef, {
           name, category, assetTag, status: 'available', trackingType: 'bulk',
           totalQuantity: parseInt(quantity), availableQuantity: parseInt(quantity),
-          dateAdded: new Date().toISOString()
+          dateAdded: serverTimestamp()
         });
       } else {
         for (let i = 0; i < quantity; i++) {
+          const docRef = doc(collection(db, 'equipment'));
           const assetTag = `${category.substring(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
-          await addDoc(collection(db, 'equipment'), {
-            name, category, assetTag, status: 'available', trackingType: 'individual', dateAdded: new Date().toISOString()
+          batch.set(docRef, {
+            name, category, assetTag, status: 'available', trackingType: 'individual', dateAdded: serverTimestamp()
           });
         }
       }
+      await batch.commit();
       setExpandedGroups(prev => ({ ...prev, [name.trim().toLowerCase()]: true }));
       showToast(`Added ${quantity} item(s).`);
       setName(''); setQuantity(1);
@@ -294,7 +300,7 @@ export default function AddEquipmentPage() {
       <div className={`w-full max-w-6xl border rounded-[2rem] sm:rounded-[3rem] shadow-xl overflow-hidden ${isDarkMode ? 'bg-white/[0.02] border-white/10' : 'bg-white border-slate-200'}`}>
         <div className={`p-6 sm:p-10 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Active Inventory</h2>
-          <span className={`text-xs sm:text-sm font-bold uppercase tracking-widest ${countText}`}>{equipmentList.length} Total Entries</span>
+          <span className={`text-xs sm:text-sm font-bold uppercase tracking-widest ${countText}`}>{equipmentList.length} Visible Entries</span>
         </div>
 
         <div className="overflow-x-auto w-full">
