@@ -12,7 +12,7 @@ export default function LandingPage() {
         backgroundImage: `url(${loginBg})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace"
+        fontFamily: "'Google Sans', 'Product Sans', 'Segoe UI', system-ui, sans-serif"
       }}
     >
       <div className="text-center max-w-4xl px-4 sm:px-6 flex flex-col items-center">

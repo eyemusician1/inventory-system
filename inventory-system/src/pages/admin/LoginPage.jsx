@@ -34,7 +34,7 @@ export default function LoginPage() {
         backgroundImage: `url(${loginBg})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace"
+        fontFamily: "'Google Sans', 'Product Sans', 'Segoe UI', system-ui, sans-serif"
       }}
     >
       <div className="absolute inset-0 bg-[#050B14]/40 backdrop-blur-md z-0"></div>

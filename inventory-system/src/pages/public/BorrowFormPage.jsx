@@ -175,7 +175,7 @@ export default function BorrowFormPage() {
 
   if (loadingEq) {
     return (
-      <div className={`min-h-screen w-full flex items-center justify-center ${pageBg}`} style={{ fontFamily: "ui-monospace, monospace" }}>
+      <div className={`min-h-screen w-full flex items-center justify-center ${pageBg}`} style={{ fontFamily: "'Google Sans', 'Product Sans', 'Segoe UI', system-ui, sans-serif" }}>
         <p className="animate-pulse font-bold tracking-widest uppercase text-sm">Locating Asset...</p>
       </div>
     );
@@ -183,7 +183,7 @@ export default function BorrowFormPage() {
 
   if (error || !equipment) {
     return (
-      <div className={`min-h-screen w-full flex items-center justify-center p-4 sm:p-6 ${pageBg}`} style={{ fontFamily: "ui-monospace, monospace" }}>
+      <div className={`min-h-screen w-full flex items-center justify-center p-4 sm:p-6 ${pageBg}`} style={{ fontFamily: "'Google Sans', 'Product Sans', 'Segoe UI', system-ui, sans-serif" }}>
         <div className={`w-full max-w-md p-8 sm:p-10 text-center border rounded-[2rem] sm:rounded-[3rem] backdrop-blur-3xl ${cardBg}`}>
           <h1 className="text-2xl sm:text-3xl font-bold mb-4">Asset Not Found</h1>
           <p className="opacity-50 text-sm sm:text-base">This QR code may be invalid or the item has been removed.</p>
@@ -193,7 +193,7 @@ export default function BorrowFormPage() {
   }
 
   return (
-    <div className={`min-h-screen w-full flex items-center justify-center p-4 sm:p-6 transition-colors duration-500 ${pageBg}`} style={{ fontFamily: "ui-monospace, monospace" }}>
+    <div className={`min-h-screen w-full flex items-center justify-center p-4 sm:p-6 transition-colors duration-500 ${pageBg}`} style={{ fontFamily: "'Google Sans', 'Product Sans', 'Segoe UI', system-ui, sans-serif" }}>
 
       <div className={`w-full max-w-xl p-6 sm:p-8 md:p-12 border rounded-[2rem] sm:rounded-[3rem] backdrop-blur-3xl transition-all ${cardBg}`}>
 

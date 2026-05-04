@@ -35,7 +35,6 @@ export default function GenerateReports() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // --- REPORT GENERATION LOGIC ---
   const formatDateValue = (value) => {
     if (value?.toDate) {
       return value.toDate().toLocaleDateString();
@@ -72,7 +71,6 @@ export default function GenerateReports() {
       let rows = [];
       let reportTitle = reportType;
 
-      // 1. FETCH & FORMAT DATA BASED ON REPORT TYPE
       if (reportType === "Current Inventory Status") {
         const snap = await getDocs(collection(db, 'equipment'));
         headers = ["Asset Tag", "Equipment Name", "Category", "Status", "Tracking", "Available Qty", "Total Qty"];
@@ -109,7 +107,6 @@ export default function GenerateReports() {
         const snap = await getDocs(collection(db, 'logs'));
         headers = ["Date Borrowed", "Borrower", "Role", "Item Name", "Qty", "Status", "Date Returned"];
 
-        // Optional: Filter for current month. Currently fetching all for a complete audit log.
         snap.forEach(doc => {
           const data = doc.data();
           rows.push([
@@ -123,11 +120,9 @@ export default function GenerateReports() {
           ]);
         });
 
-        // Sort by date borrowed (newest first) if possible
         rows.sort((a, b) => getSortableDate(b[0]) - getSortableDate(a[0]));
       }
 
-      // 2. EXPORT AS CSV
       if (format === "CSV (Spreadsheet)") {
         const csvContent = [
           headers.join(","),
@@ -144,8 +139,6 @@ export default function GenerateReports() {
         document.body.removeChild(link);
         showToast("CSV Downloaded.");
       }
-
-      // 3. EXPORT AS PDF (Via Print Dialog)
       else if (format === "PDF Document") {
         const printWindow = window.open('', '_blank');
 
@@ -219,33 +212,28 @@ export default function GenerateReports() {
   return (
     <div
       className={`min-h-screen w-full overflow-y-auto p-4 sm:p-6 md:p-12 lg:p-16 flex flex-col items-center relative transition-colors duration-500 ${pageBg}`}
-      style={{ fontFamily: "ui-monospace, monospace" }}
+      style={{ fontFamily: "'Google Sans', 'Product Sans', 'Segoe UI', system-ui, sans-serif" }}
     >
-      {/* Toast Notification */}
       <div className={`fixed bottom-4 sm:bottom-10 right-4 sm:right-10 z-[60] transition-all duration-500 transform ${toast.show ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}>
         <div className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl backdrop-blur-2xl border shadow-2xl ${isDarkMode ? 'bg-white/10 border-white/10 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
-          <span className="text-[10px] sm:text-xs font-black tracking-[0.3em] uppercase opacity-80">{toast.message}</span>
+          <span className="text-xs sm:text-sm font-bold tracking-wide uppercase opacity-80">{toast.message}</span>
         </div>
       </div>
 
-      {/* Back */}
       <button onClick={() => navigate('/dashboard')} className={`self-start text-base sm:text-lg transition-all mb-8 sm:mb-12 flex items-center gap-2 cursor-pointer ${backBtn}`}>
         <span className="text-xl sm:text-2xl">←</span> Back to Dashboard
       </button>
 
-      {/* Header */}
       <div className="w-full max-w-6xl mb-8 sm:mb-12 text-left">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-2 sm:mb-4">Generate Reports</h1>
-        <p className={`text-[10px] sm:text-sm font-bold uppercase tracking-widest ${subText}`}>System Auditing & Exports</p>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-normal mb-2 sm:mb-4">Generate Reports</h1>
+        <p className={`text-sm sm:text-base font-bold uppercase tracking-wide ${subText}`}>System Auditing & Exports</p>
       </div>
 
-      {/* Config Card */}
       <div className={`w-full max-w-6xl p-6 sm:p-8 md:p-12 backdrop-blur-3xl border rounded-[2rem] sm:rounded-[3rem] shadow-2xl ${cardBg}`}>
         <form className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 items-end" onSubmit={handleGenerate}>
 
-          {/* Report Type Dropdown */}
           <div className="lg:col-span-5 relative" ref={reportRef}>
-            <label className={`text-[9px] sm:text-xs font-bold uppercase tracking-[0.3em] mb-2 sm:mb-4 block ml-2 sm:ml-4 ${labelText}`}>Report Category</label>
+            <label className={`text-xs sm:text-sm font-bold uppercase tracking-wide mb-2 sm:mb-4 block ml-2 sm:ml-4 ${labelText}`}>Report Category</label>
             <div
               onClick={() => setIsReportOpen(!isReportOpen)}
               className={`w-full border rounded-2xl sm:rounded-3xl px-4 sm:px-8 py-4 sm:py-6 text-sm sm:text-xl cursor-pointer transition-all flex justify-between items-center ${inputBg} ${isReportOpen ? 'border-[#3852A4] ring-1 ring-[#3852A4]/50' : ''}`}
@@ -265,9 +253,8 @@ export default function GenerateReports() {
             )}
           </div>
 
-          {/* Format Dropdown */}
           <div className="lg:col-span-4 relative" ref={formatRef}>
-            <label className={`text-[9px] sm:text-xs font-bold uppercase tracking-[0.3em] mb-2 sm:mb-4 block ml-2 sm:ml-4 ${labelText}`}>Export Format</label>
+            <label className={`text-xs sm:text-sm font-bold uppercase tracking-wide mb-2 sm:mb-4 block ml-2 sm:ml-4 ${labelText}`}>Export Format</label>
             <div
               onClick={() => setIsFormatOpen(!isFormatOpen)}
               className={`w-full border rounded-2xl sm:rounded-3xl px-4 sm:px-8 py-4 sm:py-6 text-sm sm:text-xl cursor-pointer transition-all flex justify-between items-center ${inputBg} ${isFormatOpen ? 'border-[#3852A4] ring-1 ring-[#3852A4]/50' : ''}`}
@@ -287,7 +274,6 @@ export default function GenerateReports() {
             )}
           </div>
 
-          {/* Download Button */}
           <div className="lg:col-span-3">
             <button type="submit" disabled={isLoading}
               className={`w-full backdrop-blur-md border py-4 sm:py-6 rounded-2xl sm:rounded-3xl font-bold text-base sm:text-xl transition-all shadow-lg active:scale-95 cursor-pointer ${downloadBtn} ${isLoading ? 'opacity-50' : ''}`}>
@@ -297,9 +283,8 @@ export default function GenerateReports() {
         </form>
       </div>
 
-      {/* Footer */}
       <div className="mt-12 pb-6">
-        <p className={`text-[9px] sm:text-xs font-bold uppercase tracking-[0.4em] text-center ${footerText}`}>
+        <p className={`text-xs sm:text-sm font-bold uppercase tracking-wide text-center ${footerText}`}>
           End of Session Audits Available
         </p>
       </div>

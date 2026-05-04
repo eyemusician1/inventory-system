@@ -53,13 +53,11 @@ export default function ReviewBorrowLogs() {
     if (!log || !log.id) return;
 
     try {
-      // 1. Update the Log Status
       await updateDoc(doc(db, 'logs', log.id), {
         status: 'Returned',
         dateReturned: new Date().toLocaleString()
       });
 
-      // 2. Fetch current equipment data to handle hybrid tracking
       if (log.equipmentId) {
         const eqRef = doc(db, 'equipment', log.equipmentId);
         const eqSnap = await getDoc(eqRef);
@@ -68,14 +66,12 @@ export default function ReviewBorrowLogs() {
           const eqData = eqSnap.data();
 
           if (eqData.trackingType === 'bulk') {
-            // Restore bulk quantity and make available
             const restoredQty = (eqData.availableQuantity || 0) + (log.quantityBorrowed || 1);
             await updateDoc(eqRef, {
               availableQuantity: restoredQty,
               status: 'available'
             });
           } else {
-            // Simply make individual item available
             await updateDoc(eqRef, {
               status: 'available'
             });
@@ -120,14 +116,14 @@ export default function ReviewBorrowLogs() {
   };
 
   return (
-    <div className={`min-h-screen w-full p-4 sm:p-6 md:p-12 lg:p-16 flex flex-col items-center overflow-y-auto transition-colors duration-500 relative ${isDarkMode ? 'bg-[#050B14] text-white' : 'bg-slate-50 text-slate-900'}`} style={{ fontFamily: "ui-monospace, monospace" }}>
+    <div className={`min-h-screen w-full p-4 sm:p-6 md:p-12 lg:p-16 flex flex-col items-center overflow-y-auto transition-colors duration-500 relative ${isDarkMode ? 'bg-[#050B14] text-white' : 'bg-slate-50 text-slate-900'}`} style={{ fontFamily: "'Google Sans', 'Product Sans', 'Segoe UI', system-ui, sans-serif" }}>
 
       <div className={`fixed bottom-4 sm:bottom-10 right-4 sm:right-10 z-[60] transition-all duration-500 transform ${toast.show ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}>
         <div className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl backdrop-blur-2xl border shadow-2xl transition-colors duration-300 flex items-center gap-3 ${getToastStyle()}`}>
           {toast.type === 'delete' && (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
           )}
-          <span className="text-[10px] sm:text-xs font-black tracking-[0.3em] uppercase opacity-90">{toast.message}</span>
+          <span className="text-xs sm:text-sm font-bold tracking-wide uppercase opacity-90">{toast.message}</span>
         </div>
       </div>
 
@@ -164,19 +160,19 @@ export default function ReviewBorrowLogs() {
       </button>
 
       <div className="w-full max-w-7xl mb-8 sm:mb-12 text-left">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-2 sm:mb-4">Borrow Logs</h1>
-        <p className={`text-sm sm:text-lg md:text-2xl uppercase tracking-[0.3em] font-black ${isDarkMode ? 'text-blue-100/40' : 'text-slate-400'}`}>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-normal mb-2 sm:mb-4">Borrow Logs</h1>
+        <p className={`text-base sm:text-xl md:text-2xl uppercase tracking-wide font-bold ${isDarkMode ? 'text-blue-100/40' : 'text-slate-400'}`}>
           Live Activity Feed
         </p>
       </div>
 
       <div className="w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 mb-8 sm:mb-10">
         <div className={`p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex justify-between items-center border transition-all ${isDarkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white border-slate-200 shadow-xl shadow-slate-200/40'}`}>
-          <span className={`font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>Currently Out</span>
+          <span className={`font-bold uppercase tracking-wide text-xs sm:text-sm ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>Currently Out</span>
           <span className="text-4xl sm:text-5xl font-bold text-[#3B82F6] tracking-tighter">{activeCount}</span>
         </div>
         <div className={`p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex justify-between items-center border transition-all ${isDarkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white border-slate-200 shadow-xl shadow-slate-200/40'}`}>
-          <span className={`font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>Recent Records</span>
+          <span className={`font-bold uppercase tracking-wide text-xs sm:text-sm ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>Recent Records</span>
           <span className="text-4xl sm:text-5xl font-bold tracking-tighter">{logs.length}</span>
         </div>
       </div>
@@ -185,7 +181,7 @@ export default function ReviewBorrowLogs() {
         <div className="overflow-x-auto w-full">
           <table className="w-full text-left min-w-[900px]">
             <thead className={isDarkMode ? 'bg-white/5 text-white/20' : 'bg-slate-50 text-slate-400'}>
-              <tr className="text-[10px] sm:text-xs font-black uppercase tracking-[0.4em]">
+              <tr className="text-xs sm:text-sm font-bold uppercase tracking-wide">
                 <th className="px-6 sm:px-8 py-6 sm:py-10 whitespace-nowrap">Borrower Info</th>
                 <th className="px-6 sm:px-8 py-6 sm:py-10 whitespace-nowrap">Asset Name</th>
                 <th className="px-6 sm:px-8 py-6 sm:py-10 whitespace-nowrap">Checked Out</th>
@@ -204,7 +200,7 @@ export default function ReviewBorrowLogs() {
 
                     <td className="px-6 sm:px-8 py-6 sm:py-8 whitespace-nowrap">
                       <span className="text-xl sm:text-2xl font-bold block mb-1">{log.borrowerName || log.studentName}</span>
-                      <span className={`text-[10px] sm:text-xs font-bold tracking-widest uppercase flex items-center gap-2 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>
+                      <span className={`text-xs sm:text-sm font-bold tracking-wide uppercase flex items-center gap-2 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>
                         {log.borrowerRole || 'Student'} • ID: {log.borrowerId || log.studentId}
                       </span>
                     </td>
@@ -216,13 +212,13 @@ export default function ReviewBorrowLogs() {
 
                     <td className="px-6 sm:px-8 py-6 sm:py-8 whitespace-nowrap">
                       <span className={`block font-bold text-xs sm:text-sm mb-1 ${isDarkMode ? 'text-white/80' : 'text-slate-700'}`}>{formatLogDate(log)}</span>
-                      <span className={`text-[10px] sm:text-xs font-bold tracking-widest uppercase ${isDarkMode ? 'text-white/30' : 'text-slate-400'}`}>
+                      <span className={`text-xs sm:text-sm font-bold tracking-wide uppercase ${isDarkMode ? 'text-white/30' : 'text-slate-400'}`}>
                         Due: {log.expectedReturn || 'N/A'}
                       </span>
                     </td>
 
                     <td className="px-6 sm:px-8 py-6 sm:py-8 text-center whitespace-nowrap">
-                      <span className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest ${
+                      <span className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wide ${
                         log.status === 'Active' ? 'bg-[#3B82F6]/10 text-[#3B82F6]' :
                         log.status === 'Returned' ? 'bg-slate-500/20 text-slate-400' :
                         'bg-red-500/10 text-red-500'
@@ -235,8 +231,8 @@ export default function ReviewBorrowLogs() {
                       <div className="flex items-center justify-end gap-4">
                         {log.status === 'Active' ? (
                           <button
-                            onClick={() => initiateReturn(log)} // FIXED: Pass the entire log object
-                            className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-[10px] sm:text-sm tracking-widest uppercase transition-all shadow-sm active:scale-95 cursor-pointer flex items-center gap-2 border
+                            onClick={() => initiateReturn(log)}
+                            className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm tracking-wide uppercase transition-all shadow-sm active:scale-95 cursor-pointer flex items-center gap-2 border
                               ${isDarkMode
                                 ? 'bg-white/[0.05] border-white/10 text-white hover:bg-[#3852A4]/20'
                                 : 'bg-white border-slate-200 text-slate-600 hover:bg-blue-50'
@@ -246,12 +242,11 @@ export default function ReviewBorrowLogs() {
                             Receive
                           </button>
                         ) : (
-                          <div className={`text-[10px] sm:text-xs font-bold tracking-widest uppercase ${isDarkMode ? 'text-white/20' : 'text-slate-400'}`}>
+                          <div className={`text-xs sm:text-sm font-bold tracking-wide uppercase ${isDarkMode ? 'text-white/20' : 'text-slate-400'}`}>
                             Returned <br/> {log.dateReturned?.split(',')[0]}
                           </div>
                         )}
 
-                        {/* SUBTLE DELETE BUTTON */}
                         <button
                           onClick={() => initiateDelete(log.id)}
                           className={`p-2 sm:p-3 rounded-xl transition-all opacity-30 hover:opacity-100 hover:bg-red-500/10 hover:text-red-500 cursor-pointer ${isDarkMode ? 'text-white' : 'text-slate-400'}`}

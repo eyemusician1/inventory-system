@@ -7,4 +7,9 @@
     font-family: 'Google Sans';
     src: local('Product Sans'), local('ProductSans-Regular');
   }
+
+  body {
+    font-family: 'Google Sans', 'Product Sans', 'Segoe UI', system-ui, sans-serif;
+    letter-spacing: 0.01em;
+  }
 }
