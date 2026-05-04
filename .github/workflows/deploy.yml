@@ -4,12 +4,16 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build_and_deploy:
+  build:
     runs-on: ubuntu-latest
 
     defaults:
@@ -28,7 +32,7 @@ jobs:
           cache-dependency-path: inventory-system/package-lock.json # ← tells npm cache where to look
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Build Project
         run: npm run build
@@ -41,8 +45,35 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: inventory-system/dist
+          if-no-files-found: error
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+
+    defaults:
+      run:
+        working-directory: inventory-system
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: inventory-system/dist
+
       - name: Deploy to Firebase Hosting (use firebase-tools CLI)
-        run: npx firebase-tools@latest deploy --only hosting
+        run: npx firebase-tools@13.22.0 deploy --only hosting
         # this step runs in the job default `working-directory: inventory-system`
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
