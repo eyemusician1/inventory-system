@@ -405,10 +405,10 @@ export default function AddEquipmentPage() {
               <button
                 type="button"
                 onClick={() => confirmAddEquipment('individual')}
-                className={`flex flex-col text-left p-6 sm:p-8 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer group ${!suggestBulk ? 'border-[#3852A4]/60 shadow-[0_0_20px_rgba(56,82,164,0.15)]' : 'hover:border-[#3852A4]/30'} ${inputBg}`}
+                className={`flex flex-col text-left p-6 sm:p-8 rounded-2xl sm:rounded-3xl border transition-all cursor-pointer group ${suggestBulk ? 'hover:border-[#3852A4]/30' : 'border-[#3852A4]/60 shadow-[0_0_20px_rgba(56,82,164,0.15)]'} ${inputBg}`}
               >
                 <div className="flex justify-between items-start w-full mb-2">
-                  <h4 className={`font-bold uppercase tracking-wide text-sm sm:text-base transition-colors ${!suggestBulk ? 'text-[#3852A4]' : 'group-hover:text-[#3852A4]'}`}>Individual</h4>
+                  <h4 className={`font-bold uppercase tracking-wide text-sm sm:text-base transition-colors ${suggestBulk ? 'group-hover:text-[#3852A4]' : 'text-[#3852A4]'}`}>Individual</h4>
                   {!suggestBulk && <span className="text-[10px] font-bold bg-[#3852A4]/10 text-[#3852A4] px-2 py-1 rounded-full uppercase tracking-wide">Suggested</span>}
                 </div>
                 <p className={`text-xs sm:text-sm uppercase tracking-wide leading-relaxed ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>Generates a unique QR code for every single unit.</p>
